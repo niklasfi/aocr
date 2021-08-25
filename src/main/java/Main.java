@@ -1,15 +1,17 @@
-import de.niklasfi.aocr.APdfRun;
-import de.niklasfi.aocr.FileUtil;
+import de.niklasfi.aocr.*;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.internal.schedulers.ComputationScheduler;
+import org.apache.pdfbox.pdmodel.PDDocument;
 
 public class Main {
     public static void main(String[] args) {
         final var inputFilePath = args[0];
         final var outputFilePath = args[1];
 
-        final var run = new APdfRun(APdfRun.ImageExtractionStrategy.EXTRACT_LARGEST_IMAGE_FROM_PAGE);
+        final var run = new APdfRun();
         final var fileUtil = new FileUtil();
+        final var pdfUtil = new PdfIoUtil();
+        final PdfImageGetter pdfImageGetter = new PdfImageExtractor();
 
         final var scheduler = new ComputationScheduler();
 
@@ -17,7 +19,11 @@ public class Main {
                 .subscribeOn(scheduler)
                 .observeOn(scheduler)
                 .flatMapSingle(fileUtil::readFile)
-                .flatMapSingle(run::run)
+                .map(pdfUtil::readPdf)
+                .flatMap(pdfImageGetter::getImages)
+                .concatMapSingle(run::getAnnotationsForImage)
+                .collect(PDDocument::new, run::addPageToDocument)
+                .map(pdfUtil::savePdf)
                 .flatMapCompletable(bytes -> fileUtil.writeFile(outputFilePath, bytes))
                 .blockingAwait();
     }

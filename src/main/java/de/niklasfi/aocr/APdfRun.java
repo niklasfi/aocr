@@ -5,7 +5,7 @@ import com.microsoft.azure.cognitiveservices.vision.computervision.ComputerVisio
 import com.microsoft.azure.cognitiveservices.vision.computervision.implementation.ComputerVisionImpl;
 import com.microsoft.azure.cognitiveservices.vision.computervision.models.*;
 import com.microsoft.rest.ServiceResponseWithHeaders;
-import de.niklasfi.rx.Throttler;
+import de.niklasfi.rx.ThrottlerSingle;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
@@ -13,15 +13,10 @@ import io.reactivex.rxjava3.core.SingleObserver;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
-import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.tools.imageio.ImageIOUtil;
 import org.apache.pdfbox.util.Matrix;
 
@@ -39,106 +34,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class APdfRun {
-    private final ImageExtractionStrategy imageExtractionStrategy;
-
-    public enum ImageExtractionStrategy {
-        RENDER_PAGE_AS_IMAGE,
-        EXTRACT_LARGEST_IMAGE_FROM_PAGE
-    }
-
-    public APdfRun(ImageExtractionStrategy imageExtractionStrategy) {
-        this.imageExtractionStrategy = imageExtractionStrategy;
-    }
-
-    public Single<byte[]> run(byte[] inputBytes) {
-        return Flowable
-                .just(inputBytes)
-                .map(this::readPdf)
-                .flatMap(this::getImagesFromPdf)
-                .flatMap(new Throttler<>(Duration.of(6000, ChronoUnit.MILLIS)))
-                .flatMapSingle(this::azureReadImage)
-                .collect(PDDocument::new, this::addPageToDocument)
-                .map(this::pdDocumentToBytes);
-    }
-
-    private byte[] pdDocumentToBytes(PDDocument pdDocument) {
-        final var os = new ByteArrayOutputStream();
-        try {
-            pdDocument.save(os);
-        } catch (IOException e) {
-            throw new RuntimeException("could not save pdDocument to ByteArrayOutputStream", e);
-        }
-        try {
-            pdDocument.close();
-        } catch (IOException e) {
-            throw new RuntimeException("could not close pdDocument after saving to ByteArrayOutputStream", e);
-        }
-        return os.toByteArray();
-    }
-
-    private PDDocument readPdf(byte[] pdfData) {
-        try {
-            return PDDocument.load(pdfData);
-        } catch (IOException e) {
-            throw new RuntimeException("could not read pdf", e);
-        }
-    }
-
-    private Flowable<BufferedImage> renderEachPageAsImage(PDDocument document) {
-        final var renderer = new PDFRenderer(document);
-
-        return Flowable
-                .range(0, document.getNumberOfPages())
-                .map(pageIdx -> {
-                    final BufferedImage bufferedImg;
-                    try {
-                        bufferedImg = renderer.renderImageWithDPI(pageIdx, 72, ImageType.RGB);
-                    } catch (IOException e) {
-                        throw new RuntimeException("could not render image of page %s".formatted(pageIdx + 1), e);
-                    }
-                    return bufferedImg;
-                });
-    }
-
-    private Flowable<PDImageXObject> getImagesFromResources(PDResources resources) {
-        return Flowable.fromIterable(resources.getXObjectNames())
-                .map(resources::getXObject)
-                .publish(xObjects -> Flowable.merge(
-                        xObjects.ofType(PDFormXObject.class)
-                                .map(PDFormXObject::getResources)
-                                .flatMap(this::getImagesFromResources),
-                        xObjects.ofType(PDImageXObject.class)
-                                .map(xObject -> xObject)
-                ))
-                .reduce((single, max) -> {
-                    if (single.getWidth() * single.getHeight() > max.getWidth() * max.getHeight()) {
-                        return single;
-                    }
-                    return max;
-                })
-                .toFlowable();
-    }
-
-    private Flowable<BufferedImage> extractLargestImageFromEachPage(PDDocument document) {
-        return Flowable
-                .range(0, document.getNumberOfPages())
-                .map(document::getPage)
-                .concatMapSingle(this::extractLargestImageFromPage);
-    }
-
-    private Single<BufferedImage> extractLargestImageFromPage(PDPage page) {
-        return Flowable.just(page)
-                .map(PDPage::getResources)
-                .flatMap(this::getImagesFromResources)
-                .firstOrError()
-                .map(PDImageXObject::getImage);
-    }
-
-    private Flowable<BufferedImage> getImagesFromPdf(PDDocument document) {
-        return switch (imageExtractionStrategy) {
-            case RENDER_PAGE_AS_IMAGE -> renderEachPageAsImage(document);
-            case EXTRACT_LARGEST_IMAGE_FROM_PAGE -> extractLargestImageFromEachPage(document);
-        };
+    public Single<AnnotatedImage> getAnnotationsForImage(BufferedImage bufferedImage) {
+        return Single.just(bufferedImage)
+                .concatMap(new ThrottlerSingle<>(Duration.of(6000, ChronoUnit.MILLIS)))
+                .concatMap(this::azureReadImage);
     }
 
     private byte[] bufferedImageToByteArray(BufferedImage bufferedImage) {
@@ -190,16 +89,16 @@ public class APdfRun {
                 .firstOrError();
     }
 
-    private record AnnotatedImage(BufferedImage bufferedImage, AnalyzeResults analyzeResults) {
+    public record AnnotatedImage(BufferedImage bufferedImage, AnalyzeResults analyzeResults) {
 
     }
 
-    private void addPageToDocument(PDDocument pdDocument, BufferedImage bufferedImage) {
+    public void addPageToDocument(PDDocument pdDocument, BufferedImage bufferedImage) {
         final var pdPage = blankPageFromBufferedImage(pdDocument, bufferedImage);
         addBufferedImageToPage(pdDocument, pdPage, bufferedImage);
     }
 
-    private void addPageToDocument(PDDocument pdDocument, AnnotatedImage annotatedImage) {
+    public void addPageToDocument(PDDocument pdDocument, AnnotatedImage annotatedImage) {
         final var pdPage = blankPageFromBufferedImage(pdDocument, annotatedImage.bufferedImage());
         addBufferedImageToPage(pdDocument, pdPage, annotatedImage.bufferedImage());
         addAnalyzeResultsToPage(pdDocument, pdPage, annotatedImage.analyzeResults());
