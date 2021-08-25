@@ -33,7 +33,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class APdfRun {
+public class AzurePdfAnnotator {
     public Single<AnnotatedImage> getAnnotationsForImage(BufferedImage bufferedImage) {
         return Single.just(bufferedImage)
                 .concatMap(new ThrottlerSingle<>(Duration.of(6000, ChronoUnit.MILLIS)))
