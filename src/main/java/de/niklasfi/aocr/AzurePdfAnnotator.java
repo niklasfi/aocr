@@ -34,6 +34,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class AzurePdfAnnotator {
+    private static final String SUBSCRIPTION_KEY = "";
+    private static final String ENDPOINT = "";
+
     public Single<AnnotatedImage> getAnnotationsForImage(BufferedImage bufferedImage) {
         return Single.just(bufferedImage)
                 .concatMap(new ThrottlerSingle<>(Duration.of(6000, ChronoUnit.MILLIS)))
@@ -53,10 +56,7 @@ public class AzurePdfAnnotator {
     }
 
     private Single<AnnotatedImage> azureReadImage(BufferedImage bufferedImage) {
-        final String subscriptionKey = "";
-        final String endpoint = "";
-
-        final var compVisClient = ComputerVisionManager.authenticate(subscriptionKey).withEndpoint(endpoint);
+        final var compVisClient = ComputerVisionManager.authenticate(SUBSCRIPTION_KEY).withEndpoint(ENDPOINT);
         final var compVisImpl = (ComputerVisionImpl) compVisClient.computerVision();
 
         return Single.just(bufferedImage)
