@@ -34,8 +34,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class AzurePdfAnnotator {
-    private static final String SUBSCRIPTION_KEY = "";
-    private static final String ENDPOINT = "";
+    private final String ENDPOINT;
+    private final String SUBSCRIPTION_KEY;
+
+    public AzurePdfAnnotator(String endpoint, String subscription_key) {
+        ENDPOINT = endpoint;
+        SUBSCRIPTION_KEY = subscription_key;
+    }
 
     public Single<AnnotatedImage> getAnnotationsForImage(BufferedImage bufferedImage) {
         return Single.just(bufferedImage)
