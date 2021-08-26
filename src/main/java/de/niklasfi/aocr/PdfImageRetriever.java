@@ -5,6 +5,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 
 import java.awt.image.BufferedImage;
 
-public interface PdfImageGetter {
+public interface PdfImageRetriever {
     Flowable<BufferedImage> getImages(PDDocument document);
 }

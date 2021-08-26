@@ -1,9 +1,6 @@
 package de.niklasfi.aocr;
 
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.internal.schedulers.ComputationScheduler;
 import org.apache.commons.cli.*;
-import org.apache.pdfbox.pdmodel.PDDocument;
 
 public class Main {
     public static void main(String[] args) {
@@ -44,23 +41,11 @@ public class Main {
         final var azureEndpoint = cmd.getOptionValue("endpoint");
         final var azureSubscriptionKey = cmd.getOptionValue("key");
 
-        final var run = new AzurePdfAnnotator(azureEndpoint, azureSubscriptionKey);
+        final var pdfImageRetriever = new PdfImageExtractor();
+        final var pdfIoUtil = new PdfIoUtil();
         final var fileUtil = new FileUtil();
-        final var pdfUtil = new PdfIoUtil();
-        final PdfImageGetter pdfImageGetter = new PdfImageExtractor();
 
-        final var scheduler = new ComputationScheduler();
-
-        Flowable.just(inputFilePath)
-                .subscribeOn(scheduler)
-                .observeOn(scheduler)
-                .flatMapSingle(fileUtil::readFile)
-                .map(pdfUtil::readPdf)
-                .flatMap(pdfImageGetter::getImages)
-                .concatMapSingle(run::getAnnotationsForImage)
-                .collect(PDDocument::new, run::addPageToDocument)
-                .map(pdfUtil::savePdf)
-                .flatMapCompletable(bytes -> fileUtil.writeFile(outputFilePath, bytes))
-                .blockingAwait();
+        final var azurePdfOcr = new AzurePdfOcr(azureEndpoint, azureSubscriptionKey, pdfImageRetriever, pdfIoUtil, fileUtil);
+        azurePdfOcr.ocrSync(inputFilePath, outputFilePath);
     }
 }

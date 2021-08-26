@@ -10,7 +10,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
 import java.awt.image.BufferedImage;
 
-public class PdfImageExtractor implements PdfImageGetter {
+public class PdfImageExtractor implements PdfImageRetriever {
 
     private Flowable<PDImageXObject> getImagesFromResources(PDResources resources) {
         return Flowable.fromIterable(resources.getXObjectNames())
