@@ -10,7 +10,6 @@ import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.core.SingleObserver;
-import java.time.temporal.TemporalAmount;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -26,6 +25,7 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.temporal.TemporalAmount;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -188,16 +188,16 @@ public class AzurePdfAnnotator {
                             .map(point -> (Point2D.Float) azurePdfAffineTransform.transform(point, null))
                             .collect(Collectors.toList());
 
-                    // vector along the bottom horizontal of pdf coordinates
+                    // vector along the horizontal of pdf coordinates
                     final var vh = new Point2D.Float(
-                            pdfPoints.get(2).x - pdfPoints.get(3).x,
-                            pdfPoints.get(2).y - pdfPoints.get(3).y
+                            (pdfPoints.get(1).x - pdfPoints.get(0).x + pdfPoints.get(2).x - pdfPoints.get(3).x) / 2,
+                            (pdfPoints.get(1).y - pdfPoints.get(0).y + pdfPoints.get(2).y - pdfPoints.get(3).y) / 2
                     );
 
-                    // vector along the left vertical of the pdf coordinates
+                    // vector along the vertical of the pdf coordinates
                     final var vv = new Point2D.Float(
-                            pdfPoints.get(0).x - pdfPoints.get(3).x,
-                            pdfPoints.get(0).y - pdfPoints.get(3).y
+                            (pdfPoints.get(0).x - pdfPoints.get(3).x + pdfPoints.get(1).x - pdfPoints.get(2).x) / 2,
+                            (pdfPoints.get(0).y - pdfPoints.get(3).y + pdfPoints.get(1).y - pdfPoints.get(2).y) / 2
                     );
 
                     // projection of vv onto vh
@@ -206,11 +206,8 @@ public class AzurePdfAnnotator {
                     // remainder after projection, a.k.a. height
                     final var targetHeight = (float) new Point2D.Float(vv.x - vvPrj.x, vv.y - vvPrj.y).distance(0, 0);
 
-                    // projection of vh onto vv
-                    final var vhPrjFactor = (vh.x * vv.x + vh.y * vv.y) / (float) vv.distanceSq(0, 0);
-                    final var vhPrj = new Point2D.Float(vv.x * vhPrjFactor, vv.y * vhPrjFactor);
-                    // remainder after projection, a.k.a. width
-                    final var targetWidth = (float) new Point2D.Float(vh.x - vhPrj.x, vh.y - vhPrj.y).distance(0, 0);
+                    // length of vh is target width
+                    final var targetWidth = (float) new Point2D.Float(vh.x, vh.y).distance(0, 0);
 
                     // angle of vh with respect to the x-axis
                     final var angle = Math.atan2(vh.y, vh.x);
