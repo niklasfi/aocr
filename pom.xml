@@ -26,6 +26,12 @@
     <scm>
         <developerConnection>scm:git:git://git@github.com:niklasfi/aocr.git</developerConnection>
     </scm>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
     <dependencyManagement>
         <dependencies>
             <dependency>
