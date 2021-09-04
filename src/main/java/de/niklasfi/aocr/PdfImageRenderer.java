@@ -8,7 +8,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-public class PdfImageRenderer implements PdfImageGetter {
+public class PdfImageRenderer implements PdfImageRetriever {
     @Override
     public Flowable<BufferedImage> getImages(PDDocument document) {
         final var renderer = new PDFRenderer(document);
