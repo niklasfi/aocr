@@ -21,6 +21,7 @@ usage: aocr
  -i,--input <arg>      path to input pdf file
  -k,--key <arg>        subscription key to access azure cognitive services
  -o,--output <arg>     path to save output to
+ -p,--paid             azure subscription is on paid tier
 ```
 
 for example:
