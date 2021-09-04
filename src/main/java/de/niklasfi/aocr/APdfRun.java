@@ -1,3 +1,5 @@
+package de.niklasfi.aocr;
+
 import com.microsoft.azure.cognitiveservices.vision.computervision.ComputerVision;
 import com.microsoft.azure.cognitiveservices.vision.computervision.ComputerVisionManager;
 import com.microsoft.azure.cognitiveservices.vision.computervision.implementation.ComputerVisionImpl;

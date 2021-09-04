@@ -1,3 +1,5 @@
+import de.niklasfi.aocr.APdfRun;
+
 public class Main {
     public static void main(String[] args) {
         final var inputFilePath = args[0];
