@@ -1,24 +1,18 @@
 package de.niklasfi.rx;
 
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.functions.Function;
-import org.reactivestreams.Publisher;
-
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAmount;
-import java.util.concurrent.TimeUnit;
 
-public class Throttler<R> implements Function<R, Publisher<? extends R>> {
+public class ThrottlerBase {
     private final TemporalAmount minInterval;
     private OffsetDateTime nextSlot;
 
-    public Throttler(TemporalAmount minInterval) {
+    public ThrottlerBase(TemporalAmount minInterval) {
         this.minInterval = minInterval;
     }
 
-    @Override
-    public Publisher<? extends R> apply(R r) {
+    protected final long getNextSlotDelay(){
         final var now = OffsetDateTime.now();
         final long delayMs;
 
@@ -31,6 +25,6 @@ public class Throttler<R> implements Function<R, Publisher<? extends R>> {
         }
 
         //System.out.printf("now: %s, delay: %s, next: %s%n", now, delayMs, nextSlot);
-        return Flowable.just(r).delay(delayMs, TimeUnit.MILLISECONDS);
+        return delayMs;
     }
 }
