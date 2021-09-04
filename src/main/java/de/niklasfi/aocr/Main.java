@@ -1,4 +1,5 @@
-import de.niklasfi.aocr.*;
+package de.niklasfi.aocr;
+
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.internal.schedulers.ComputationScheduler;
 import org.apache.commons.cli.*;
