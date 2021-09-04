@@ -10,7 +10,6 @@ import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.core.SingleObserver;
-import io.reactivex.rxjava3.internal.schedulers.ComputationScheduler;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -29,7 +28,8 @@ import org.apache.pdfbox.util.Matrix;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -39,8 +39,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class APdfRun {
-    private final String inputFilePath;
-    private final String outputFilePath;
     private final ImageExtractionStrategy imageExtractionStrategy;
 
     public enum ImageExtractionStrategy {
@@ -48,20 +46,13 @@ public class APdfRun {
         EXTRACT_LARGEST_IMAGE_FROM_PAGE
     }
 
-    public APdfRun(String inputFilePath, String outputFilePath, ImageExtractionStrategy imageExtractionStrategy) {
-        this.inputFilePath = inputFilePath;
-        this.outputFilePath = outputFilePath;
+    public APdfRun(ImageExtractionStrategy imageExtractionStrategy) {
         this.imageExtractionStrategy = imageExtractionStrategy;
     }
 
-    public Single<byte[]> run() {
-        final var scheduler = new ComputationScheduler();
-
+    public Single<byte[]> run(byte[] inputBytes) {
         return Flowable
-                .just(inputFilePath)
-                .subscribeOn(scheduler)
-                .observeOn(scheduler)
-                .map(this::readInputFile)
+                .just(inputBytes)
                 .map(this::readPdf)
                 .flatMap(this::getImagesFromPdf)
                 .flatMap(new Throttler<>(Duration.of(6000, ChronoUnit.MILLIS)))
@@ -83,24 +74,6 @@ public class APdfRun {
             throw new RuntimeException("could not close pdDocument after saving to ByteArrayOutputStream", e);
         }
         return os.toByteArray();
-    }
-
-    private byte[] readInputFile(String inputFilePath) {
-        final FileInputStream fis;
-        try {
-            fis = new FileInputStream(inputFilePath);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException("could not open input file", e);
-        }
-
-        final byte[] inputBytes;
-        try {
-            inputBytes = fis.readAllBytes();
-        } catch (IOException e) {
-            throw new RuntimeException("could not read input file", e);
-        }
-
-        return inputBytes;
     }
 
     private PDDocument readPdf(byte[] pdfData) {
