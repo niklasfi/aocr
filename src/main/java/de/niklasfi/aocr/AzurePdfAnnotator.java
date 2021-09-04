@@ -10,6 +10,7 @@ import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.core.SingleObserver;
+import java.time.temporal.TemporalAmount;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -25,8 +26,6 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -36,15 +35,17 @@ import java.util.stream.Collectors;
 public class AzurePdfAnnotator {
     private final String ENDPOINT;
     private final String SUBSCRIPTION_KEY;
+    private final TemporalAmount throttlerInterval;
 
-    public AzurePdfAnnotator(String endpoint, String subscription_key) {
+    public AzurePdfAnnotator(String endpoint, String subscription_key, TemporalAmount throttlerInterval) {
         ENDPOINT = endpoint;
         SUBSCRIPTION_KEY = subscription_key;
+        this.throttlerInterval = throttlerInterval;
     }
 
     public Single<AnnotatedImage> getAnnotationsForImage(BufferedImage bufferedImage) {
         return Single.just(bufferedImage)
-                .concatMap(new ThrottlerSingle<>(Duration.of(6000, ChronoUnit.MILLIS)))
+                .concatMap(new ThrottlerSingle<>(throttlerInterval))
                 .concatMap(this::azureReadImage);
     }
 
