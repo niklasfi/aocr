@@ -75,7 +75,7 @@ public class AzurePdfAnnotator {
                                                 OcrDetectionLanguage.DE,
                                                 null,
                                                 null,
-                                                null)
+                                                "natural")
                                         .subscribe(new ForwardingSingleObserver<>(observer));
                             }
                         }
