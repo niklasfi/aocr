@@ -54,27 +54,35 @@ public class APdfRun {
         this.imageExtractionStrategy = imageExtractionStrategy;
     }
 
-    public void run() {
+    public Single<byte[]> run() {
         final var scheduler = new ComputationScheduler();
 
-        try (final var pdDoc =
-                     Flowable
-                             .just(inputFilePath)
-                             .subscribeOn(scheduler)
-                             .observeOn(scheduler)
-                             .map(this::readInputFile)
-                             .map(this::readPdf)
-                             .flatMap(this::getImagesFromPdf)
-                             .flatMap(new Throttler<>(Duration.of(6000, ChronoUnit.MILLIS)))
-                             .flatMapSingle(this::azureReadImage)
-                             .collect(PDDocument::new, this::addPageToDocument)
-                             .blockingGet();
-             final var fos = new FileOutputStream(outputFilePath, false)
-        ) {
-            pdDoc.save(fos);
+        return Flowable
+                .just(inputFilePath)
+                .subscribeOn(scheduler)
+                .observeOn(scheduler)
+                .map(this::readInputFile)
+                .map(this::readPdf)
+                .flatMap(this::getImagesFromPdf)
+                .flatMap(new Throttler<>(Duration.of(6000, ChronoUnit.MILLIS)))
+                .flatMapSingle(this::azureReadImage)
+                .collect(PDDocument::new, this::addPageToDocument)
+                .map(this::pdDocumentToBytes);
+    }
+
+    private byte[] pdDocumentToBytes(PDDocument pdDocument) {
+        final var os = new ByteArrayOutputStream();
+        try {
+            pdDocument.save(os);
         } catch (IOException e) {
-            throw new RuntimeException("could not close PDDocument or output stream", e);
+            throw new RuntimeException("could not save pdDocument to ByteArrayOutputStream", e);
         }
+        try {
+            pdDocument.close();
+        } catch (IOException e) {
+            throw new RuntimeException("could not close pdDocument after saving to ByteArrayOutputStream", e);
+        }
+        return os.toByteArray();
     }
 
     private byte[] readInputFile(String inputFilePath) {
