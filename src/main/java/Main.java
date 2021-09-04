@@ -8,7 +8,7 @@ public class Main {
         final var inputFilePath = args[0];
         final var outputFilePath = args[1];
 
-        final var run = new APdfRun();
+        final var run = new AzurePdfAnnotator();
         final var fileUtil = new FileUtil();
         final var pdfUtil = new PdfIoUtil();
         final PdfImageGetter pdfImageGetter = new PdfImageExtractor();
