@@ -24,6 +24,12 @@
         </license>
     </licenses>
     <url>https://github.com/niklasfi/aocr</url>
+    <developers>
+        <developer>
+            <id>niklasfi</id>
+            <name>Niklas Fischer</name>
+        </developer>
+    </developers>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
