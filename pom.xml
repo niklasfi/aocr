@@ -249,7 +249,8 @@
                             <executable>${basedir}/etc/scripts/create-standalone-elf.sh</executable>
                             <environmentVariables>
                                 <mvn_basedir>${basedir}</mvn_basedir>
-                                <input_file>${project.build.directory}/${project.build.finalName}.jar</input_file>
+                                <input_file>${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar</input_file>
+                                <output_file>${project.build.directory}/${project.build.finalName}</output_file>
                             </environmentVariables>
                         </configuration>
                     </execution>
