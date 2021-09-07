@@ -4,11 +4,13 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.internal.schedulers.ComputationScheduler;
-import java.time.temporal.TemporalAmount;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
 
 public class AzurePdfOcr {
     private final String azureEndpoint;
@@ -18,6 +20,13 @@ public class AzurePdfOcr {
     private final PdfIoUtil pdfUtil;
     private final FileUtil fileUtil;
     private final TemporalAmount throttlerInterval;
+
+    // https://docs.microsoft.com/en-us/azure/cognitive-services/computer-vision/vision-api-how-to-topics/call-read-api
+    // free tier: 20 calls per minute
+    public final static TemporalAmount LIMIT_INTERVAL_FREE_TIER = Duration.of(60000 / 20, ChronoUnit.MILLIS);
+
+    // paid tier: 10 calls per second
+    public final static TemporalAmount LIMIT_INTERVAL_PAID_TIER = Duration.of(1000 / 10, ChronoUnit.MILLIS);
 
     public AzurePdfOcr(String azureEndpoint, String azureSubscriptionKey, PdfImageRetriever pdfImageRetriever, PdfIoUtil pdfUtil, FileUtil fileUtil,
                        TemporalAmount throttlerInterval) {

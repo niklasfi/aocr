@@ -1,8 +1,5 @@
 package de.niklasfi.aocr;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAmount;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -12,13 +9,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 public class Main {
-
-    // https://docs.microsoft.com/en-us/azure/cognitive-services/computer-vision/vision-api-how-to-topics/call-read-api
-    // free tier: 20 calls per minute
-    public final static TemporalAmount LIMIT_INTERVAL_FREE_TIER = Duration.of(60000 / 20, ChronoUnit.MILLIS);
-
-    // paid tier: 10 calls per second
-    public final static TemporalAmount LIMIT_INTERVAL_PAID_TIER = Duration.of(1000 / 10, ChronoUnit.MILLIS);
 
     public static void main(String[] args) {
         final var options = new Options();
@@ -64,11 +54,12 @@ public class Main {
         final var pdfImageRetriever = new PdfImageExtractor();
         final var pdfIoUtil = new PdfIoUtil();
         final var fileUtil = new FileUtil();
-        final var throttlerInterval = cmd.hasOption("paid") ? LIMIT_INTERVAL_PAID_TIER : LIMIT_INTERVAL_FREE_TIER;
+        final var throttlerInterval = cmd.hasOption("paid") ? AzurePdfOcr.LIMIT_INTERVAL_PAID_TIER
+                : AzurePdfOcr.LIMIT_INTERVAL_FREE_TIER;
 
         final var azurePdfOcr =
                 new AzurePdfOcr(azureEndpoint, azureSubscriptionKey, pdfImageRetriever, pdfIoUtil, fileUtil,
-                                throttlerInterval);
+                        throttlerInterval);
         azurePdfOcr.ocrSync(inputFilePath, outputFilePath);
     }
 }
