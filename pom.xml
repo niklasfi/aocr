@@ -42,7 +42,7 @@
         <org.apache.pdfbox.version>2.0.24</org.apache.pdfbox.version>
         <com.microsoft.azure.cognitiveservices.azure-cognitiveservices-computervision.version>1.0.8-beta
         </com.microsoft.azure.cognitiveservices.azure-cognitiveservices-computervision.version>
-        <io.reactivex.rxjava3.version>3.1.0</io.reactivex.rxjava3.version>
+        <io.reactivex.rxjava3.version>3.1.1</io.reactivex.rxjava3.version>
         <commons-cli.version>1.4</commons-cli.version>
         <org.owasp.dependency-check-maven.version>6.3.1</org.owasp.dependency-check-maven.version>
         <maven-gpg-plugin.keyname>0x35FF613B8F44CFEB</maven-gpg-plugin.keyname>
