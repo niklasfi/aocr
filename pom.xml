@@ -37,7 +37,7 @@
         <org.mapstruct.version>1.5.0.Beta1</org.mapstruct.version>
         <org.apache.maven.plugins.maven-compiler-plugin.version>3.8.1
         </org.apache.maven.plugins.maven-compiler-plugin.version>
-        <org.junit.version>5.7.2</org.junit.version>
+        <org.junit.version>5.8.0</org.junit.version>
         <org.projectlombok.lombok.version>1.18.20</org.projectlombok.lombok.version>
         <org.apache.pdfbox.version>2.0.24</org.apache.pdfbox.version>
         <com.microsoft.azure.cognitiveservices.azure-cognitiveservices-computervision.version>1.0.8-beta
