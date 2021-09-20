@@ -108,6 +108,16 @@
             <artifactId>azure-cognitiveservices-computervision</artifactId>
             <version>${com.microsoft.azure.cognitiveservices.azure-cognitiveservices-computervision.version}</version>
         </dependency>
+        <!-- fix guava-24.1.1-jre.jar (pkg:maven/com.google.guava/guava@24.1.1-jre, cpe:2.3:a:google:guava:24.1.1:*:*:*:*:*:*:*) : CVE-2020-8908
+            included by com.microsoft.azure.cognitiveservices:azure-cognitiveservices-computervision@1.0.8-beta
+         -->
+        <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>30.1.1-jre</version>
+        </dependency>
+
         <dependency>
             <groupId>io.reactivex.rxjava3</groupId>
             <artifactId>rxjava</artifactId>
