@@ -25,7 +25,7 @@ Add the following snippet to your dependencies:
 <dependency>
   <groupId>de.niklasfi.aocr</groupId>
   <artifactId>aocr</artifactId>
-  <version>1.2</version>
+  <version>1.3</version>
 </dependency>
 ```
 
