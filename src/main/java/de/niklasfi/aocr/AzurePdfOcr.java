@@ -1,17 +1,13 @@
 package de.niklasfi.aocr;
 
-import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.internal.schedulers.ComputationScheduler;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAmount;
+import java.util.Optional;
 
+@Slf4j
 public class AzurePdfOcr {
     private final String azureEndpoint;
     private final String azureSubscriptionKey;
@@ -19,58 +15,58 @@ public class AzurePdfOcr {
     private final PdfImageRetriever pdfImageRetriever;
     private final PdfIoUtil pdfUtil;
     private final FileUtil fileUtil;
-    private final TemporalAmount throttlerInterval;
 
-    // https://docs.microsoft.com/en-us/azure/cognitive-services/computer-vision/vision-api-how-to-topics/call-read-api
-    // free tier: 20 calls per minute
-    public final static TemporalAmount LIMIT_INTERVAL_FREE_TIER = Duration.of(60000 / 20, ChronoUnit.MILLIS);
-
-    // paid tier: 10 calls per second
-    public final static TemporalAmount LIMIT_INTERVAL_PAID_TIER = Duration.of(1000 / 10, ChronoUnit.MILLIS);
-
-    public AzurePdfOcr(String azureEndpoint, String azureSubscriptionKey, PdfImageRetriever pdfImageRetriever, PdfIoUtil pdfUtil, FileUtil fileUtil,
-                       TemporalAmount throttlerInterval) {
+    public AzurePdfOcr(String azureEndpoint, String azureSubscriptionKey, PdfImageRetriever pdfImageRetriever, PdfIoUtil pdfUtil, FileUtil fileUtil) {
         this.azureEndpoint = azureEndpoint;
         this.azureSubscriptionKey = azureSubscriptionKey;
         this.pdfImageRetriever = pdfImageRetriever;
         this.pdfUtil = pdfUtil;
         this.fileUtil = fileUtil;
-        this.throttlerInterval = throttlerInterval;
     }
 
-    public Single<byte[]> ocr(byte[] inputPdf) {
-        final var run = new AzurePdfAnnotator(azureEndpoint, azureSubscriptionKey, throttlerInterval);
+    public byte[] ocr(byte[] inputPdf) {
+        final var run = new AzurePdfAnnotator(azureEndpoint, azureSubscriptionKey);
 
-        return Flowable.just(inputPdf)
-                .map(pdfUtil::readPdf)
-                .flatMap(pdfImageRetriever::getImages)
-                .concatMapSingle(run::getAnnotationsForImage)
-                .collect(PDDocument::new, run::addPageToDocument)
-                .map(pdfUtil::savePdf);
+        log.trace("parsing input pdf");
+        final var pdDocIn = pdfUtil.readPdf(inputPdf);
+        log.debug("parsed input pdf");
+
+        log.trace("retrieving images from input pdf");
+        final var images = pdfImageRetriever.getImages(pdDocIn).filter(Optional::isPresent).map(Optional::get);
+        log.debug("retrieved all images from input pdf");
+
+        log.trace("calling azure read api for annotations");
+        final var annotations = images.map(img -> run.getAnnotationsForImageWithRetry(img, 5));
+        log.debug("received all annotations");
+
+        log.trace("rendering output pdf");
+        final var pdDocOut = annotations.reduce(new PDDocument(), (acc, cur) -> {
+            run.addPageToDocument(acc, cur);
+            return acc;
+        }, (acc1, acc2) -> {
+            throw new RuntimeException("cannot operate on parallel streams");
+        });
+        log.debug("pdf rendered successfully");
+
+        log.trace("saving output pdf into buffer");
+        final var bytesOut = pdfUtil.savePdf(pdDocOut);
+        log.debug("saved output pdf into buffer successful");
+
+        return bytesOut;
     }
 
-    public Single<InputStream> ocr(InputStream inputStream) {
-        final var fileUtil = new FileUtil();
-
-        return Single.just(inputStream)
-                .map(fileUtil::readStream)
-                .flatMap(this::ocr)
-                .map(ByteArrayInputStream::new);
+    public InputStream ocr(InputStream inputStream) {
+        final var bytesIn = fileUtil.readStream(inputStream);
+        final var bytesOut = ocr(bytesIn);
+        return new ByteArrayInputStream(bytesOut);
     }
 
-    public Completable ocr(String inputFilePath, String outputFilePath) {
-        return Single.just(inputFilePath)
-                .map(fileUtil::readFile)
-                .flatMap(this::ocr)
-                .flatMapCompletable(pdfBytes -> Completable.fromRunnable(() -> fileUtil.writeFile(outputFilePath, pdfBytes)));
-    }
+    public void ocr(String inputFilePath, String outputFilePath) {
+        final var bytesIn = fileUtil.readFile(inputFilePath);
+        final var bytesOut = ocr(bytesIn);
 
-    public void ocrSync(String inputFilePath, String outputFilePath) {
-        final var scheduler = new ComputationScheduler();
-
-        this.ocr(inputFilePath, outputFilePath)
-                .subscribeOn(scheduler)
-                .observeOn(scheduler)
-                .blockingAwait();
+        log.trace("writing buffer to file");
+        fileUtil.writeFile(outputFilePath, bytesOut);
+        log.debug("buffer successfully written to file");
     }
 }

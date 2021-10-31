@@ -37,11 +37,9 @@ To call `aocr`, you first have to construct an instance of `de.niklasfi.aocr.Azu
 final var pdfImageRetriever = new PdfImageExtractor(); // or alternatively: new PdfImageRenderer();
 final var pdfIoUtil = new PdfIoUtil();
 final var fileUtil = new FileUtil();
-final var throttlerInterval = AzurePdfOcr.LIMIT_INTERVAL_FREE_TIER // or alternatively LIMIT_INTERVAL_PAID_TIER
 
 final var azurePdfOcr =
-        new AzurePdfOcr(azureEndpoint, azureSubscriptionKey, pdfImageRetriever, pdfIoUtil, fileUtil,
-                        throttlerInterval);
+        new AzurePdfOcr(azureEndpoint, azureSubscriptionKey, pdfImageRetriever, pdfIoUtil, fileUtil);
 ```
 
 Once `azurePdfOcr` has been constructed, it can be used to apply ocr using the `ocr*` methods. 
@@ -59,11 +57,25 @@ mvn package
 
 ```
 usage: aocr
- -e,--endpoint <arg>   azure cognitive services endpoint url
- -i,--input <arg>      path to input pdf file
- -k,--key <arg>        subscription key to access azure cognitive services
- -o,--output <arg>     path to save output to
- -p,--paid             azure subscription is on paid tier
+ -c,--render-color <arg>      color scheme to use when rendering page from
+                              input pdf into an image. Possible values:
+                              - binary: convert to black / white image
+                              - gray: convert to grayscale image
+                              - rgb (default): convert to full color image
+ -d,--render-dpi <arg>        dpi to use when rendering page from input
+                              pdf into an image. Defaults to 300 dpi.
+ -e,--endpoint <arg>          azure cognitive services endpoint url
+ -i,--input <arg>             path to input pdf file
+ -k,--key <arg>               subscription key to access azure cognitive
+                              services
+ -o,--output <arg>            path to save output to
+ -r,--retrieve-method <arg>   method to use to retrieve images from input
+                              pdf. Possible values:
+                              - extract (default): use the largest image
+                              on the page (useful for scans)
+                              - render: render the page into an image. dpi
+                              and color modes may be configured using
+                              --render-dpi and --render-color
 ```
 
 for example:

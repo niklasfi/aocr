@@ -1,10 +1,11 @@
 package de.niklasfi.aocr;
 
-import io.reactivex.rxjava3.core.Flowable;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import java.awt.image.BufferedImage;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public interface PdfImageRetriever {
-    Flowable<BufferedImage> getImages(PDDocument document);
+    Stream<Optional<BufferedImage>> getImages(PDDocument document);
 }
