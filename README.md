@@ -33,16 +33,20 @@ Add the following snippet to your dependencies:
 
 To call `aocr`, you first have to construct an instance of `de.niklasfi.aocr.AzurePdfOcr`. It can be constructed like so:
 
-```
+```java
+final var apiHandler = new AzureApiHandler(azureEndpoint, azureSubscriptionKey);
 final var pdfImageRetriever = new PdfImageExtractor(); // or alternatively: new PdfImageRenderer();
 final var pdfIoUtil = new PdfIoUtil();
 final var fileUtil = new FileUtil();
 
-final var azurePdfOcr =
-        new AzurePdfOcr(azureEndpoint, azureSubscriptionKey, pdfImageRetriever, pdfIoUtil, fileUtil);
+final var azurePdfOcr = new AzurePdfOcr(apiHandler, pdfImageRetriever, pdfIoUtil, fileUtil);
 ```
 
-Once `azurePdfOcr` has been constructed, it can be used to apply ocr using the `ocr*` methods. 
+Now call `ocr`
+
+```java
+azurePdfOcr.ocr(inputPath, outputPath) // or one of the other variants
+```
 
 ### command line
 

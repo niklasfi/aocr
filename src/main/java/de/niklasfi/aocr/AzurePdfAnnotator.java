@@ -1,14 +1,6 @@
 package de.niklasfi.aocr;
 
-import com.microsoft.azure.cognitiveservices.vision.computervision.ComputerVisionManager;
-import com.microsoft.azure.cognitiveservices.vision.computervision.implementation.ComputerVisionImpl;
 import com.microsoft.azure.cognitiveservices.vision.computervision.models.AnalyzeResults;
-import com.microsoft.azure.cognitiveservices.vision.computervision.models.ComputerVisionOcrErrorException;
-import com.microsoft.azure.cognitiveservices.vision.computervision.models.OcrDetectionLanguage;
-import com.microsoft.azure.cognitiveservices.vision.computervision.models.OperationStatusCodes;
-import com.microsoft.azure.cognitiveservices.vision.computervision.models.ReadInStreamHeaders;
-import com.microsoft.azure.cognitiveservices.vision.computervision.models.ReadOperationResult;
-import com.microsoft.rest.ServiceResponseWithHeaders;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -17,136 +9,17 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
-import org.apache.pdfbox.tools.imageio.ImageIOUtil;
 import org.apache.pdfbox.util.Matrix;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class AzurePdfAnnotator {
-    private final String endpoint;
-    private final String subscriptionKey;
-
-    public AzurePdfAnnotator(String endpoint, String subscription_key) {
-        this.endpoint = endpoint;
-        subscriptionKey = subscription_key;
-    }
-
-    private void handleComputerVisionOcrErrorException(ComputerVisionOcrErrorException e) {
-        if (e.response().code() == 429) {
-            final var retryAfterSeconds = e.response().headers().values("retry-after").stream().map(Integer::parseInt).findFirst();
-
-            if (retryAfterSeconds.isEmpty()) {
-                throw new RuntimeException("could not retrieve delay amount from 429 response", e);
-            }
-
-            log.trace("received http status 429, sleeping for {} ms as requested", Duration.ofSeconds(retryAfterSeconds.get()).toMillis());
-            try {
-                Thread.sleep(Duration.ofSeconds(retryAfterSeconds.get()).toMillis());
-            } catch (InterruptedException ex) {
-                throw new RuntimeException("sleep was interrupted", ex);
-            }
-            log.trace("woke up");
-        } else {
-            // we don't know how to handle this
-            throw e;
-        }
-    }
-
-    public AnnotatedImage getAnnotationsForImageWithRetry(BufferedImage bufferedImage, int maxTries) {
-        Optional<AnnotatedImage> result = Optional.empty();
-        for (int tries = 0; tries < maxTries; tries = tries + 1) {
-            result = getAnnotationsForImage(bufferedImage);
-
-            if (result.isPresent()) {
-                break;
-            } else {
-                log.warn("get annotations for image attempt {} failed. retrying", tries);
-            }
-        }
-        return result.orElseThrow(() -> new RuntimeException("could not get annotations for image"));
-    }
-
-    public Optional<AnnotatedImage> getAnnotationsForImage(BufferedImage bufferedImage) {
-        final var compVisClient = ComputerVisionManager.authenticate(subscriptionKey).withEndpoint(endpoint);
-        final var compVisImpl = (ComputerVisionImpl) compVisClient.computerVision();
-
-        final var imgBytes = bufferedImageToByteArray(bufferedImage);
-
-        log.trace("creating read operation");
-        UUID extractedOperationId = null;
-        while (extractedOperationId == null) {
-            try {
-                final var serviceResponse = compVisImpl.readInStreamWithServiceResponseAsync(imgBytes, OcrDetectionLanguage.DE,
-                        null,
-                        null,
-                        "natural").toBlocking().first();
-
-                final var operationLocation = extractOperationLocationFromResponse(serviceResponse);
-                extractedOperationId = extractOperationIdFromOpLocation(operationLocation);
-            } catch (ComputerVisionOcrErrorException e) {
-                handleComputerVisionOcrErrorException(e);
-            }
-        }
-        log.trace("created read operation, operationId = '{}'", extractedOperationId);
-
-        log.trace("extracting operation result");
-        ReadOperationResult apiResult = null;
-        while (apiResult == null) {
-            try {
-                final var readResultTmp = compVisImpl.getReadResult(extractedOperationId);
-                if (readResultTmp.status() == OperationStatusCodes.SUCCEEDED || readResultTmp.status() == OperationStatusCodes.FAILED) {
-                    apiResult = readResultTmp;
-                    continue;
-                }
-
-            } catch (ComputerVisionOcrErrorException e) {
-                handleComputerVisionOcrErrorException(e);
-            }
-
-            try {
-                Thread.sleep(Duration.ofSeconds(1).toMillis());
-            } catch (InterruptedException e) {
-                throw new RuntimeException("sleep was interrupted", e);
-            }
-        }
-        log.info("extracted operation result. status is {}", apiResult.status());
-
-        if (apiResult.status() == OperationStatusCodes.FAILED) {
-            return Optional.empty();
-        }
-
-        return Optional.of(new AnnotatedImage(bufferedImage, apiResult.analyzeResult()));
-    }
-
-    private byte[] bufferedImageToByteArray(BufferedImage bufferedImage) {
-        final var os = new ByteArrayOutputStream();
-        try {
-            if (!ImageIOUtil.writeImage(bufferedImage, "png", os)) {
-                throw new RuntimeException("could not render image from bufferedImage");
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("could not render image from bufferedImage", e);
-        }
-        return os.toByteArray();
-    }
-
-    private String extractOperationLocationFromResponse(ServiceResponseWithHeaders<Void, ReadInStreamHeaders> response) {
-        return response.response().headers().values("operation-location").stream().findFirst().orElse(null);
-    }
-
-    public record AnnotatedImage(BufferedImage bufferedImage, AnalyzeResults analyzeResults) {
-
-    }
 
     public void addPageToDocument(PDDocument pdDocument, BufferedImage bufferedImage) {
         final var pdPage = blankPageFromBufferedImage(pdDocument, bufferedImage);
@@ -313,14 +186,5 @@ public class AzurePdfAnnotator {
         }
     }
 
-    private UUID extractOperationIdFromOpLocation(String operationLocation) {
-        if (operationLocation != null && !operationLocation.isEmpty()) {
-            String[] splits = operationLocation.split("/");
 
-            if (splits.length > 0) {
-                return UUID.fromString(splits[splits.length - 1]);
-            }
-        }
-        throw new IllegalStateException("Something went wrong: Couldn't extract the operation id from the operation location");
-    }
 }

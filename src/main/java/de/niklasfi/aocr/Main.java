@@ -71,6 +71,8 @@ public class Main {
         final var azureEndpoint = cmd.getOptionValue("endpoint");
         final var azureSubscriptionKey = cmd.getOptionValue("key");
 
+        final var apiHandler = new AzureApiHandler(azureEndpoint, azureSubscriptionKey);
+
         final var renderColor = switch (cmd.getOptionValue("render-color")) {
             case "binary" -> ImageType.BINARY;
             case "gray" -> ImageType.GRAY;
@@ -90,7 +92,7 @@ public class Main {
         final var fileUtil = new FileUtil();
 
         final var azurePdfOcr =
-                new AzurePdfOcr(azureEndpoint, azureSubscriptionKey, pdfImageRetriever, pdfIoUtil, fileUtil);
+                new AzurePdfOcr(apiHandler, pdfImageRetriever, pdfIoUtil, fileUtil);
         azurePdfOcr.ocr(inputFilePath, outputFilePath);
 
         log.trace("goodbye from main");

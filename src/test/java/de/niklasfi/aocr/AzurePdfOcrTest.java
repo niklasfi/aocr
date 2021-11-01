@@ -17,8 +17,7 @@ class AzurePdfOcrTest {
         }
 
         final AzurePdfOcr azurePdfOcr = new AzurePdfOcr(
-                endpoint,
-                key,
+                new AzureApiHandler(endpoint, key),
                 new PdfImageRenderer(300, ImageType.BINARY),
                 new PdfIoUtil(),
                 new FileUtil()

@@ -9,23 +9,20 @@ import java.util.Optional;
 
 @Slf4j
 public class AzurePdfOcr {
-    private final String azureEndpoint;
-    private final String azureSubscriptionKey;
-
+    private final AzureApiHandler apiHandler;
     private final PdfImageRetriever pdfImageRetriever;
     private final PdfIoUtil pdfUtil;
     private final FileUtil fileUtil;
 
-    public AzurePdfOcr(String azureEndpoint, String azureSubscriptionKey, PdfImageRetriever pdfImageRetriever, PdfIoUtil pdfUtil, FileUtil fileUtil) {
-        this.azureEndpoint = azureEndpoint;
-        this.azureSubscriptionKey = azureSubscriptionKey;
+    public AzurePdfOcr(AzureApiHandler apiHandler, PdfImageRetriever pdfImageRetriever, PdfIoUtil pdfUtil, FileUtil fileUtil) {
+        this.apiHandler = apiHandler;
         this.pdfImageRetriever = pdfImageRetriever;
         this.pdfUtil = pdfUtil;
         this.fileUtil = fileUtil;
     }
 
     public byte[] ocr(byte[] inputPdf) {
-        final var run = new AzurePdfAnnotator(azureEndpoint, azureSubscriptionKey);
+        final var run = new AzurePdfAnnotator();
 
         log.trace("parsing input pdf");
         final var pdDocIn = pdfUtil.readPdf(inputPdf);
@@ -36,7 +33,7 @@ public class AzurePdfOcr {
         log.debug("retrieved all images from input pdf");
 
         log.trace("calling azure read api for annotations");
-        final var annotations = images.map(img -> run.getAnnotationsForImageWithRetry(img, 5));
+        final var annotations = images.map(img -> apiHandler.getAnnotationsForImageWithRetry(img, 5));
         log.debug("received all annotations");
 
         log.trace("rendering output pdf");
