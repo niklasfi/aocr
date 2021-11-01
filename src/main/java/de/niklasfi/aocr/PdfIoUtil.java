@@ -6,7 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class PdfIoUtil {
-    public byte[] savePdf(PDDocument pdDocument) {
+    public byte[] saveAndClosePdf(PDDocument pdDocument) {
         final var os = new ByteArrayOutputStream();
         try {
             pdDocument.save(os);

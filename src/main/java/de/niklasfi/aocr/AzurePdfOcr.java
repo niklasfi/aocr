@@ -49,7 +49,7 @@ public class AzurePdfOcr {
         log.debug("{} pdf rendered successfully", trace);
 
         log.trace("{} saving output pdf into buffer", trace);
-        final var bytesOut = pdfUtil.savePdf(pdDocOut);
+        final var bytesOut = pdfUtil.saveAndClosePdf(pdDocOut);
         log.debug("{} saved output pdf into buffer successful", trace);
 
         return bytesOut;
