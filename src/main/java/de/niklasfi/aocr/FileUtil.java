@@ -8,26 +8,19 @@ public class FileUtil {
             return readStream(System.in);
         }
 
-        final FileInputStream fis;
-        try {
-            fis = new FileInputStream(path);
-        } catch (FileNotFoundException e) {
+        try (final FileInputStream fis = new FileInputStream(path)) {
+            try {
+                return fis.readAllBytes();
+            } catch (IOException e) {
+                throw new RuntimeException("could not read input file", e);
+            }
+        } catch (IOException e) {
             throw new RuntimeException("could not open input file", e);
         }
-
-        final byte[] inputBytes;
-        try {
-            inputBytes = fis.readAllBytes();
-        } catch (IOException e) {
-            throw new RuntimeException("could not read input file", e);
-        }
-
-        return inputBytes;
     }
 
     public byte[] readStream(InputStream stream) {
-        final var is = new BufferedInputStream(stream);
-        try {
+        try (final var is = new BufferedInputStream(stream)) {
             return is.readAllBytes();
         } catch (IOException e) {
             throw new RuntimeException("could not read from input stream", e);
