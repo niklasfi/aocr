@@ -20,7 +20,7 @@ public class PdfImageRenderer implements PdfImageRetriever {
     }
 
     @Override
-    public Stream<Optional<BufferedImage>> getImages(PDDocument document) {
+    public Stream<PageContainer<Optional<BufferedImage>>> getImages(PDDocument document) {
         final var renderer = new PDFRenderer(document);
 
         return IntStream.range(0, document.getNumberOfPages()).mapToObj(pageIdx -> {
@@ -28,9 +28,9 @@ public class PdfImageRenderer implements PdfImageRetriever {
             try {
                 bufferedImg = renderer.renderImageWithDPI(pageIdx, dpi, imageType);
             } catch (IOException e) {
-                throw new RuntimeException("could not render image of page", e);
+                return new PageContainer<>(pageIdx, Optional.empty());
             }
-            return Optional.of(bufferedImg);
+            return new PageContainer<>(pageIdx, Optional.of(bufferedImg));
         });
     }
 }

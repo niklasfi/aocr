@@ -28,7 +28,9 @@ public class AzurePdfAnnotator {
     public void addPageToDocument(PDDocument pdDocument, AnnotatedImage annotatedImage) {
         final var pdPage = blankPageFromBufferedImage(pdDocument, annotatedImage.bufferedImage());
         addBufferedImageToPage(pdDocument, pdPage, annotatedImage.bufferedImage());
-        addAnalyzeResultsToPage(pdDocument, pdPage, annotatedImage.analyzeResult());
+        annotatedImage.analyzeResult().ifPresent(result ->
+            addAnalyzeResultsToPage(pdDocument, pdPage, result)
+        );
     }
 
     private PDPage blankPageFromBufferedImage(PDDocument pdDocument, BufferedImage bufferedImage) {

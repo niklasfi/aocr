@@ -38,10 +38,10 @@ public class PdfImageExtractor implements PdfImageRetriever {
     }
 
     @Override
-    public Stream<Optional<BufferedImage>> getImages(PDDocument document) {
+    public Stream<PageContainer<Optional<BufferedImage>>> getImages(PDDocument document) {
         return IntStream.range(0, document.getNumberOfPages())
-                .mapToObj(document::getPage)
-                .map(this::extractLargestImageFromPage);
+                .mapToObj(i -> new PageContainer<>(i, document.getPage(i)))
+                .map(pc -> new PageContainer<>(pc.page(), extractLargestImageFromPage(pc.data())));
     }
 
     private Optional<BufferedImage> extractLargestImageFromPage(PDPage pageContainer) {
