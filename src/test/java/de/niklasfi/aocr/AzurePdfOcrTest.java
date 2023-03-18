@@ -31,7 +31,6 @@ class AzurePdfOcrTest {
         final AzurePdfOcr azurePdfOcr = new AzurePdfOcr(
                 apiAdapter,
                 new PdfImageRenderer(300, ImageType.BINARY),
-                new PdfIoUtil(),
                 new FileUtil()
         );
         azurePdfOcr.ocr("src/test/resources/LaTeXTemplates_tufte-essay_v2.0.pdf", "/tmp/out.pdf");

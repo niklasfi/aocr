@@ -98,10 +98,9 @@ public class Main {
             default -> throw new RuntimeException("could not parse render-method option");
         };
 
-        final var pdfIoUtil = new PdfIoUtil();
         final var fileUtil = new FileUtil();
 
-        final var azurePdfOcr = new AzurePdfOcr(apiAdapter, pdfImageRetriever, pdfIoUtil, fileUtil);
+        final var azurePdfOcr = new AzurePdfOcr(apiAdapter, pdfImageRetriever, fileUtil);
         azurePdfOcr.ocr(inputFilePath, outputFilePath);
 
         log.trace("goodbye from main");

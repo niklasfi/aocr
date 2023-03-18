@@ -9,6 +9,7 @@ import org.apache.hc.core5.http.ContentType;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,7 +24,6 @@ import java.util.Optional;
 public class AzurePdfOcr {
     private final AzureApiAdapter apiAdapter;
     private final PdfImageRetriever pdfImageRetriever;
-    private final PdfIoUtil pdfUtil;
     private final FileUtil fileUtil;
 
     public byte[] ocr(byte[] inputPdf) {
@@ -73,19 +73,16 @@ public class AzurePdfOcr {
         log.debug("received all annotations");
 
         log.trace("rendering output pdf");
-        final var pdDocOut = annotations.reduce(new PDDocument(), (acc, cur) -> {
-            run.addPageToDocument(acc, cur);
-            return acc;
-        }, (acc1, acc2) -> {
-            throw new RuntimeException("cannot operate on parallel streams");
-        });
-        log.debug("pdf rendered successfully");
-
-        log.trace("saving output pdf into buffer");
-        final var bytesOut = pdfUtil.saveAndClosePdf(pdDocOut);
-        log.debug("saved output pdf into buffer successful");
-
-        return bytesOut;
+        try(
+                final var pdDocOut = new PDDocument();
+                final var os = new ByteArrayOutputStream()
+        ){
+            annotations.forEachOrdered(a -> run.addPageToDocument(pdDocOut, a));
+            pdDocOut.save(os);
+            return os.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public InputStream ocr(InputStream inputStream) {

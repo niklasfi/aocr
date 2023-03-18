@@ -42,7 +42,6 @@ class AzurePdfOcrMultiThreadTest {
                     final AzurePdfOcr azurePdfOcr = new AzurePdfOcr(
                             apiAdapter,
                             new PdfImageRenderer(300, ImageType.RGB),
-                            new PdfIoUtil(),
                             new FileUtil()
                     );
                     log.info("thread {}: submitting job", i);
