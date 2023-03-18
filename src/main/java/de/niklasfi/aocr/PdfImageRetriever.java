@@ -7,5 +7,5 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public interface PdfImageRetriever {
-    Stream<TracebackContainer<Optional<BufferedImage>>> getImages(PDDocument document, TracebackInfo trace);
+    Stream<Optional<BufferedImage>> getImages(PDDocument document);
 }

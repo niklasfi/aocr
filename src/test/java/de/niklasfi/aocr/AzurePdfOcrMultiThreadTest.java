@@ -1,6 +1,11 @@
 package de.niklasfi.aocr;
 
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import de.niklasfi.aocr.azure.api.AzureApiAdapter;
+import de.niklasfi.aocr.azure.api.AzureUriBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.pdfbox.rendering.ImageType;
 import org.junit.jupiter.api.Test;
 
@@ -25,12 +30,17 @@ class AzurePdfOcrMultiThreadTest {
             return;
         }
 
-        final var apiHandler = new AzureApiHandler(endpoint, key);
+        final var apiAdapter = new AzureApiAdapter(
+                new AzureUriBuilder(endpoint),
+                key,
+                HttpClients.createDefault(),
+                JsonMapper.builder().addModule(new JavaTimeModule()).build()
+        );
 
         final var futures = IntStream.range(0, 10).mapToObj((i) ->
                 executor.submit(() -> {
                     final AzurePdfOcr azurePdfOcr = new AzurePdfOcr(
-                            apiHandler,
+                            apiAdapter,
                             new PdfImageRenderer(300, ImageType.RGB),
                             new PdfIoUtil(),
                             new FileUtil()

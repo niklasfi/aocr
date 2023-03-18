@@ -1,6 +1,6 @@
 package de.niklasfi.aocr;
 
-import com.microsoft.azure.cognitiveservices.vision.computervision.models.AnalyzeResults;
+import de.niklasfi.aocr.azure.dto.AnalyzeResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -16,7 +16,6 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class AzurePdfAnnotator {
@@ -29,7 +28,7 @@ public class AzurePdfAnnotator {
     public void addPageToDocument(PDDocument pdDocument, AnnotatedImage annotatedImage) {
         final var pdPage = blankPageFromBufferedImage(pdDocument, annotatedImage.bufferedImage());
         addBufferedImageToPage(pdDocument, pdPage, annotatedImage.bufferedImage());
-        addAnalyzeResultsToPage(pdDocument, pdPage, annotatedImage.analyzeResults());
+        addAnalyzeResultsToPage(pdDocument, pdPage, annotatedImage.analyzeResult());
     }
 
     private PDPage blankPageFromBufferedImage(PDDocument pdDocument, BufferedImage bufferedImage) {
@@ -74,7 +73,7 @@ public class AzurePdfAnnotator {
         return sb.toString();
     }
 
-    private void addAnalyzeResultsToPage(PDDocument pdDocument, PDPage pdPage, AnalyzeResults analyzeResults) {
+    private void addAnalyzeResultsToPage(PDDocument pdDocument, PDPage pdPage, AnalyzeResult analyzeResult) {
         final var font = PDType1Font.HELVETICA;
 
         // width and height of pdf page
@@ -88,10 +87,10 @@ public class AzurePdfAnnotator {
             graphicsState.setNonStrokingAlphaConstant(0.f);
             cs.setGraphicsStateParameters(graphicsState);
 
-            for (final var readResult : analyzeResults.readResults()) {
+            for (final var readResult : analyzeResult.readResults()) {
                 // width and height of azure image
-                final var wa = (float) readResult.width();
-                final var ha = (float) readResult.height();
+                final var wa = readResult.width();
+                final var ha = readResult.height();
 
                 // see https://en.wikipedia.org/wiki/Affine_transformation
                 // use
@@ -122,7 +121,7 @@ public class AzurePdfAnnotator {
 
                     final var pdfPoints = azurePoints.stream()
                             .map(point -> (Point2D.Float) azurePdfAffineTransform.transform(point, null))
-                            .collect(Collectors.toList());
+                            .toList();
 
                     // vector along the horizontal of pdf coordinates
                     final var vh = new Point2D.Float(
@@ -185,6 +184,4 @@ public class AzurePdfAnnotator {
             throw new RuntimeException("could not create page content stream", e);
         }
     }
-
-
 }

@@ -1,5 +1,9 @@
 package de.niklasfi.aocr;
 
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import de.niklasfi.aocr.azure.api.AzureApiAdapter;
+import de.niklasfi.aocr.azure.api.AzureUriBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -8,6 +12,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.pdfbox.rendering.ImageType;
 
 import java.util.Optional;
@@ -71,7 +76,12 @@ public class Main {
         final var azureEndpoint = cmd.getOptionValue("endpoint");
         final var azureSubscriptionKey = cmd.getOptionValue("key");
 
-        final var apiHandler = new AzureApiHandler(azureEndpoint, azureSubscriptionKey);
+        final var apiAdapter = new AzureApiAdapter(
+                new AzureUriBuilder(azureEndpoint),
+                azureSubscriptionKey,
+                HttpClients.createDefault(),
+                JsonMapper.builder().addModule(new JavaTimeModule()).build()
+        );
 
         final var renderColor = switch (cmd.getOptionValue("render-color")) {
             case "binary" -> ImageType.BINARY;
@@ -91,8 +101,7 @@ public class Main {
         final var pdfIoUtil = new PdfIoUtil();
         final var fileUtil = new FileUtil();
 
-        final var azurePdfOcr =
-                new AzurePdfOcr(apiHandler, pdfImageRetriever, pdfIoUtil, fileUtil);
+        final var azurePdfOcr = new AzurePdfOcr(apiAdapter, pdfImageRetriever, pdfIoUtil, fileUtil);
         azurePdfOcr.ocr(inputFilePath, outputFilePath);
 
         log.trace("goodbye from main");

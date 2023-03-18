@@ -1,9 +1,9 @@
 package de.niklasfi.aocr;
 
-import com.microsoft.azure.cognitiveservices.vision.computervision.models.AnalyzeResults;
+import de.niklasfi.aocr.azure.dto.AnalyzeResult;
 
 import java.awt.image.BufferedImage;
 
-public record AnnotatedImage(BufferedImage bufferedImage, AnalyzeResults analyzeResults) {
+public record AnnotatedImage(BufferedImage bufferedImage, AnalyzeResult analyzeResult) {
 
 }
