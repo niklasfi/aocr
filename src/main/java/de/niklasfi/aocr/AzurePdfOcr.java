@@ -1,6 +1,7 @@
 package de.niklasfi.aocr;
 
 import de.niklasfi.aocr.azure.api.AzureApiAdapter;
+import de.niklasfi.aocr.azure.dto.AnalyzeResult;
 import de.niklasfi.aocr.azure.dto.ReadResultHeader;
 import de.niklasfi.aocr.azure.dto.Status;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,7 +28,11 @@ public class AzurePdfOcr {
     private final PdfImageRetriever pdfImageRetriever;
     private final FileUtil fileUtil;
 
-    public byte[] ocr(byte[] inputPdf) {
+    public record PdfAndAnnotations(byte[] pdfData, List<AnalyzeResult> analyzeResults) {
+
+    }
+
+    public PdfAndAnnotations ocrGetAnalyzeResults(byte[] inputPdf) {
         final var run = new AzurePdfAnnotator();
 
         final List<PageContainer<Optional<BufferedImage>>> images;
@@ -93,18 +100,30 @@ public class AzurePdfOcr {
                 final var pdDocOut = new PDDocument();
                 final var os = new ByteArrayOutputStream()
         ) {
-            annotations.forEachOrdered(pageContainer -> {
-                if (pageContainer.data().isPresent()) {
-                    run.addPageToDocument(pdDocOut, pageContainer.data().get());
-                } else {
-                    log.error("skipping page {} in output generation as we don't have a source image", pageContainer.page());
-                }
-            });
+            final var analyzeResults = annotations
+                    .map(pageContainer -> {
+                        if (pageContainer.data().isPresent()) {
+                            run.addPageToDocument(pdDocOut, pageContainer.data().get());
+                        } else {
+                            log.error("skipping page {} in output generation as we don't have a source image", pageContainer.page());
+                        }
+                        return pageContainer.data()
+                                .orElse(null);
+                    })
+                    // filter out all missing images
+                    .filter(Objects::nonNull)
+                    // add null values, if annotation result is not present
+                    .map(a -> a.analyzeResult().orElse(null))
+                    .collect(Collectors.toList());
             pdDocOut.save(os);
-            return os.toByteArray();
+            return new PdfAndAnnotations(os.toByteArray(), analyzeResults);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public byte[] ocr(byte[] inputPdf) {
+        return ocrGetAnalyzeResults(inputPdf).pdfData();
     }
 
     public InputStream ocr(InputStream inputStream) {
