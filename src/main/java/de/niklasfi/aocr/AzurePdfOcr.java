@@ -14,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -28,18 +29,27 @@ public class AzurePdfOcr {
     public byte[] ocr(byte[] inputPdf) {
         final var run = new AzurePdfAnnotator();
 
+        final List<BufferedImage> images;
         log.trace("parsing input pdf");
-        final var pdDocIn = pdfUtil.readPdf(inputPdf);
-        log.debug("parsed input pdf");
+        try(
+                final var pdDocIn = PDDocument.load(inputPdf)
+        ) {
+            log.debug("parsed input pdf");
 
-        log.trace("retrieving images from input pdf");
-        final var images = pdfImageRetriever.getImages(pdDocIn)
-                .filter(Optional::isPresent)
-                .map(Optional::get);
-        log.debug("retrieved all images from input pdf");
+            log.trace("retrieving images from input pdf");
+            images = pdfImageRetriever.getImages(pdDocIn)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .toList();
+            log.debug("retrieved all images from input pdf");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         log.trace("calling azure read api for annotations");
-        final var annotations = images.map(contImg -> {
+        final var annotations = images
+                .stream()
+                .map(contImg -> {
                     final byte[] png;
                     try (final var is = new ByteArrayOutputStream()) {
                         ImageIO.write(contImg, "png", is);
