@@ -33,7 +33,7 @@ class AzurePdfOcrTest {
                 apiAdapter,
                 new PdfImageRenderer(300, ImageType.BINARY),
                 new FileUtil(),
-                PDType1Font.HELVETICA
+                (doc) -> PDType1Font.HELVETICA
         );
         azurePdfOcr.ocr("src/test/resources/LaTeXTemplates_tufte-essay_v2.0.pdf", "/tmp/out.pdf");
     }

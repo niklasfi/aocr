@@ -101,7 +101,12 @@ public class Main {
 
         final var fileUtil = new FileUtil();
 
-        final var azurePdfOcr = new AzurePdfOcr(apiAdapter, pdfImageRetriever, fileUtil, PDType1Font.HELVETICA);
+        final var azurePdfOcr = new AzurePdfOcr(
+                apiAdapter,
+                pdfImageRetriever,
+                fileUtil,
+                (doc) -> PDType1Font.HELVETICA
+        );
         azurePdfOcr.ocr(inputFilePath, outputFilePath);
 
         log.trace("goodbye from main");

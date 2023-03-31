@@ -4,6 +4,7 @@ import de.niklasfi.aocr.azure.api.AzureApiAdapter;
 import de.niklasfi.aocr.azure.dto.AnalyzeResult;
 import de.niklasfi.aocr.azure.dto.ReadResultHeader;
 import de.niklasfi.aocr.azure.dto.Status;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.core5.http.ContentType;
@@ -28,7 +29,7 @@ public class AzurePdfOcr {
     private final AzureApiAdapter apiAdapter;
     private final PdfImageRetriever pdfImageRetriever;
     private final FileUtil fileUtil;
-    private final PDFont font;
+    private final Function<PDDocument, PDFont> fontLoader;
 
     public record PdfAndAnnotations(byte[] pdfData, List<AnalyzeResult> analyzeResults) {
 
@@ -102,6 +103,7 @@ public class AzurePdfOcr {
                 final var pdDocOut = new PDDocument();
                 final var os = new ByteArrayOutputStream()
         ) {
+            final var font = fontLoader.apply(pdDocOut);
             final var analyzeResults = annotations
                     .map(pageContainer -> {
                         if (pageContainer.data().isPresent()) {

@@ -44,7 +44,7 @@ class AzurePdfOcrMultiThreadTest {
                             apiAdapter,
                             new PdfImageRenderer(300, ImageType.RGB),
                             new FileUtil(),
-                            PDType1Font.HELVETICA
+                            (doc) -> PDType1Font.HELVETICA
                     );
                     log.info("thread {}: submitting job", i);
                     azurePdfOcr.ocr("src/test/resources/LaTeXTemplates_tufte-essay_v2.0.pdf", "/tmp/out-%s.pdf".formatted(i));
