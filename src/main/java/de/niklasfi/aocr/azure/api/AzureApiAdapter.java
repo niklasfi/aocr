@@ -5,6 +5,7 @@ import de.niklasfi.aocr.azure.core.concurrent.CloseableReentrantLock;
 import de.niklasfi.aocr.azure.core.http.HttpAcceptedResponseHandler;
 import de.niklasfi.aocr.azure.core.http.HttpEntityResponseHandler;
 import de.niklasfi.aocr.azure.core.http.HttpRetryResponseHandler;
+import de.niklasfi.aocr.azure.core.http.HttpRetryResponseHandler.HttpResponseRetryException;
 import de.niklasfi.aocr.azure.dto.Language;
 import de.niklasfi.aocr.azure.dto.ReadResultHeader;
 import de.niklasfi.aocr.azure.dto.Status;
@@ -64,6 +65,8 @@ public class AzureApiAdapter {
                     } catch (InterruptedException e2) {
                         throw new RuntimeException(e2);
                     }
+                } catch (IOException e){
+                    throw e;
                 }
             }
         } while (Duration.between(begin, ZonedDateTime.now()).compareTo(timeout) <= 0);
@@ -77,7 +80,13 @@ public class AzureApiAdapter {
         interceptSetSubscriptionKey(request);
         interceptSetContentType(request, ContentType.APPLICATION_JSON);
 
-        return httpClient.execute(request, new HttpEntityResponseHandler<>(objectMapper, ReadResultHeader.class));
+        try {
+            return httpClient.execute(request, new HttpEntityResponseHandler<>(objectMapper, ReadResultHeader.class));
+        } catch (HttpResponseRetryException e){
+            throw e;
+        } catch (IOException e){
+            throw e;
+        }
     }
 
     public ReadResultHeader waitResult(OperationLocation operationLocation, Duration timeout) throws IOException {

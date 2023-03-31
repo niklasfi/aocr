@@ -6,7 +6,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDSimpleFont;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
@@ -25,11 +26,11 @@ public class AzurePdfAnnotator {
         addBufferedImageToPage(pdDocument, pdPage, bufferedImage);
     }
 
-    public void addPageToDocument(PDDocument pdDocument, AnnotatedImage annotatedImage) {
+    public void addPageToDocument(PDDocument pdDocument, PDFont font, AnnotatedImage annotatedImage) {
         final var pdPage = blankPageFromBufferedImage(pdDocument, annotatedImage.bufferedImage());
         addBufferedImageToPage(pdDocument, pdPage, annotatedImage.bufferedImage());
         annotatedImage.analyzeResult().ifPresent(result ->
-            addAnalyzeResultsToPage(pdDocument, pdPage, result)
+            addAnalyzeResultsToPage(pdDocument, pdPage, font, result)
         );
     }
 
@@ -62,22 +63,38 @@ public class AzurePdfAnnotator {
     private static final int BB_BL_Y = 7;
     private static final int FONT_SIZE = 12;
 
-    private String stripEncoding(String text, PDType1Font font) {
-        StringBuilder sb = new StringBuilder();
-        for (int idx = 0; idx < text.length(); ++idx) {
-            if (font.getEncoding().contains(text.charAt(idx))) {
-                sb.append(text.charAt(idx));
-            } else {
-                log.warn("cannot encode {}. skipping this char", text.codePointAt(idx));
+    private String stripEncoding(String text, PDFont font) {
+        if (font instanceof final PDSimpleFont sf) {
+            StringBuilder sb = new StringBuilder();
+            for (int idx = 0; idx < text.length(); ++idx) {
+                if (sf.getEncoding().contains(text.charAt(idx))) {
+                    sb.append(text.charAt(idx));
+                } else {
+                    log.warn("cannot encode {}. skipping this char", text.codePointAt(idx));
+                }
             }
-        }
 
-        return sb.toString();
+            return sb.toString();
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for(int idx = 0; idx < text.length(); ++idx){
+                final var charStr = Character.toString(text.charAt(idx));
+                try {
+                    font.encode(charStr);
+                } catch (IllegalArgumentException e) {
+                    // cannot encode character.
+                    log.warn("cannot encode {}. skipping this char", text.codePointAt(idx));
+                    continue;
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                sb.append(charStr);
+            }
+            return sb.toString();
+        }
     }
 
-    private void addAnalyzeResultsToPage(PDDocument pdDocument, PDPage pdPage, AnalyzeResult analyzeResult) {
-        final var font = PDType1Font.HELVETICA;
-
+    private void addAnalyzeResultsToPage(PDDocument pdDocument, PDPage pdPage, PDFont font, AnalyzeResult analyzeResult) {
         // width and height of pdf page
         final var wp = pdPage.getMediaBox().getWidth();
         final var hp = pdPage.getMediaBox().getHeight();
@@ -155,11 +172,20 @@ public class AzurePdfAnnotator {
                     // https://stackoverflow.com/questions/13701017/calculation-string-width-in-pdfbox-seems-only-to-count-characters
                     // https://stackoverflow.com/questions/17171815/get-the-font-height-of-a-character-in-pdfbox
                     final var baseTextWidth = font.getStringWidth(textStripped) / 1000 * FONT_SIZE;
+
+                    if (baseTextWidth == 0) {
+                        continue;
+                    }
+
                     final var scaleX = targetWidth / baseTextWidth;
 
                     // https://stackoverflow.com/questions/17171815/get-the-font-height-of-a-character-in-pdfbox
                     final var baseTextScale = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000;
                     final var baseTextHeight = baseTextScale * FONT_SIZE;
+
+                    if (baseTextHeight == 0) {
+                        continue;
+                    }
                     final var scaleY = targetHeight / baseTextHeight;
                     // move text up a bit to compensate for the fact that the bottom of the text box does not correspond
                     // with the baseline of the text
@@ -171,8 +197,12 @@ public class AzurePdfAnnotator {
 
                     // create total transform by combining those defined above
                     final var totalTransform = originTransform.clone();
-                    totalTransform.concatenate(sizeTranslate);
-                    totalTransform.concatenate(sizeScale);
+                    try {
+                        totalTransform.concatenate(sizeTranslate);
+                        totalTransform.concatenate(sizeScale);
+                    } catch (IllegalArgumentException e){
+                        throw e;
+                    }
 
                     // actually draw the line
                     cs.beginText();

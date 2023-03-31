@@ -6,6 +6,7 @@ import de.niklasfi.aocr.azure.api.AzureApiAdapter;
 import de.niklasfi.aocr.azure.api.AzureUriBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.rendering.ImageType;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +32,8 @@ class AzurePdfOcrTest {
         final AzurePdfOcr azurePdfOcr = new AzurePdfOcr(
                 apiAdapter,
                 new PdfImageRenderer(300, ImageType.BINARY),
-                new FileUtil()
+                new FileUtil(),
+                PDType1Font.HELVETICA
         );
         azurePdfOcr.ocr("src/test/resources/LaTeXTemplates_tufte-essay_v2.0.pdf", "/tmp/out.pdf");
     }

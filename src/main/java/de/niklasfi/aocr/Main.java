@@ -13,6 +13,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.rendering.ImageType;
 
 import java.util.Optional;
@@ -100,7 +101,7 @@ public class Main {
 
         final var fileUtil = new FileUtil();
 
-        final var azurePdfOcr = new AzurePdfOcr(apiAdapter, pdfImageRetriever, fileUtil);
+        final var azurePdfOcr = new AzurePdfOcr(apiAdapter, pdfImageRetriever, fileUtil, PDType1Font.HELVETICA);
         azurePdfOcr.ocr(inputFilePath, outputFilePath);
 
         log.trace("goodbye from main");

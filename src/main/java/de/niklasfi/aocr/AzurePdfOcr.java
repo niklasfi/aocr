@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -27,6 +28,7 @@ public class AzurePdfOcr {
     private final AzureApiAdapter apiAdapter;
     private final PdfImageRetriever pdfImageRetriever;
     private final FileUtil fileUtil;
+    private final PDFont font;
 
     public record PdfAndAnnotations(byte[] pdfData, List<AnalyzeResult> analyzeResults) {
 
@@ -103,7 +105,7 @@ public class AzurePdfOcr {
             final var analyzeResults = annotations
                     .map(pageContainer -> {
                         if (pageContainer.data().isPresent()) {
-                            run.addPageToDocument(pdDocOut, pageContainer.data().get());
+                            run.addPageToDocument(pdDocOut, font, pageContainer.data().get());
                         } else {
                             log.error("skipping page {} in output generation as we don't have a source image", pageContainer.page());
                         }
