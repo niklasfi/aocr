@@ -47,7 +47,12 @@ public class AzureApiAdapter {
                 .setEntity(data, contentType)
                 .build();
         interceptSetSubscriptionKey(request);
-        final var locationHeader = httpClient.execute(request, new HttpAcceptedResponseHandler("Operation-Location"));
+        final String locationHeader;
+        try {
+            locationHeader = httpClient.execute(request, new HttpAcceptedResponseHandler("Operation-Location"));
+        } catch (IOException e){
+            throw e;
+        }
         return OperationLocation.fromFullUrl(locationHeader);
     }
 
