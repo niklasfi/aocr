@@ -34,6 +34,16 @@ public class AzurePdfOcr {
 
     }
 
+    public AnalyzeResult analyzeResultOnly(byte[] inputPdf) {
+        try {
+            final var loc = apiAdapter.waitAnalyze(inputPdf, ContentType.APPLICATION_PDF, null, Duration.ofSeconds(300));
+            final var resultHeader = apiAdapter.waitResult(loc, Duration.ofSeconds(30));
+            return resultHeader.analyzeResult();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public PdfAndAnnotations ocrGetAnalyzeResults(byte[] inputPdf) {
         final var run = new AzurePdfAnnotator();
 
