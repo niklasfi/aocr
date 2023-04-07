@@ -43,7 +43,7 @@
         <org.apache.commons.commons-text.version>1.10.0</org.apache.commons.commons-text.version>
         <org.apache.httpcomponents.client5.version>5.2.1</org.apache.httpcomponents.client5.version>
         <org.apache.maven.plugins.maven-surefire-plugin.version>3.0.0</org.apache.maven.plugins.maven-surefire-plugin.version>
-        <org.owasp.dependency-check-maven.version>8.1.2</org.owasp.dependency-check-maven.version>
+        <org.owasp.dependency-check-maven.version>8.2.1</org.owasp.dependency-check-maven.version>
         <maven-gpg-plugin.keyname>0x35FF613B8F44CFEB</maven-gpg-plugin.keyname>
         <org.apache.maven.plugins.maven-source-plugin.version>3.2.1
         </org.apache.maven.plugins.maven-source-plugin.version>
