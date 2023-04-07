@@ -23,25 +23,44 @@ import java.util.stream.Collectors;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 
 @Slf4j
-@RequiredArgsConstructor
 public class AzurePdfOcr {
     private final AzureApiAdapter apiAdapter;
     private final PdfImageRetriever pdfImageRetriever;
     private final FileUtil fileUtil;
     private final Function<PDDocument, PDFont> fontLoader;
+    private final AzurePdfOcrParameters parameters;
+
+    public AzurePdfOcr(
+            AzureApiAdapter apiAdapter,
+        PdfImageRetriever pdfImageRetriever,
+        FileUtil fileUtil,
+        Function<PDDocument, PDFont> fontLoader,
+        AzurePdfOcrParameters parameters
+    ){
+        this.apiAdapter = apiAdapter;
+        this.pdfImageRetriever= pdfImageRetriever;
+        this.fileUtil = fileUtil;
+        this.fontLoader = fontLoader;
+        this.parameters = parameters;
+    }
+
+    public AzurePdfOcr(
+            AzureApiAdapter apiAdapter,
+            PdfImageRetriever pdfImageRetriever,
+            FileUtil fileUtil,
+            Function<PDDocument, PDFont> fontLoader
+    ){
+        this(
+                apiAdapter,
+                pdfImageRetriever,
+                fileUtil,
+                fontLoader,
+                AzurePdfOcrParameters.buildDefault()
+        );
+    }
 
     public record PdfAndAnnotations(byte[] pdfData, List<AnalyzeResult> analyzeResults) {
 
-    }
-
-    public AnalyzeResult analyzeResultOnly(byte[] inputPdf) {
-        try {
-            final var loc = apiAdapter.waitAnalyze(inputPdf, ContentType.APPLICATION_PDF, null, Duration.ofSeconds(300));
-            final var resultHeader = apiAdapter.waitResult(loc, Duration.ofSeconds(30));
-            return resultHeader.analyzeResult();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public PdfAndAnnotations ocrGetAnalyzeResults(byte[] inputPdf) {
@@ -81,8 +100,13 @@ public class AzurePdfOcr {
                         }
                         final ReadResultHeader resultHeader;
                         try {
-                            final var loc = apiAdapter.waitAnalyze(png, ContentType.IMAGE_PNG, null, Duration.ofSeconds(300));
-                            resultHeader = apiAdapter.waitResult(loc, Duration.ofSeconds(30));
+                            final var loc = apiAdapter.waitAnalyze(
+                                    png,
+                                    ContentType.IMAGE_PNG,
+                                    parameters.language(),
+                                    parameters.timeoutAnalyze()
+                            );
+                            resultHeader = apiAdapter.waitResult(loc, parameters.timeoutResult());
                         } catch (IOException e) {
                             log.error("azure api call failed. not adding annotations to page {}", pageContainer.page());
                             return new PageContainer<>(
