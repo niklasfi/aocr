@@ -4,7 +4,7 @@
 
     <groupId>de.niklasfi.aocr</groupId>
     <artifactId>aocr</artifactId>
-    <version>2.4</version>
+    <version>2.5-SNAPSHOT</version>
     <name>aocr</name>
     <description>Swiftly add ocr layers to scanned pdf files.
 
@@ -62,7 +62,7 @@
         <developerConnection>scm:git:ssh://git@github.com/niklasfi/aocr.git</developerConnection>
         <connection>scm:git:https://github.com/niklasfi/aocr.git</connection>
         <url>https://github.com/niklasfi/aocr</url>
-        <tag>v2.4</tag>
+        <tag>HEAD</tag>
     </scm>
     <distributionManagement>
         <snapshotRepository>
