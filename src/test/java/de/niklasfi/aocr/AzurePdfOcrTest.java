@@ -7,12 +7,9 @@ import de.niklasfi.aocr.azure.api.AzureUriBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.rendering.ImageType;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.util.Objects;
 
 @Slf4j
 class AzurePdfOcrTest {
@@ -37,7 +34,7 @@ class AzurePdfOcrTest {
                 apiAdapter,
                 new PdfImageRenderer(300, ImageType.BINARY),
                 new FileUtil(),
-                (doc) -> PDType1Font.HELVETICA
+                (doc) -> new PDType1Font(Standard14Fonts.FontName.HELVETICA)
         );
         azurePdfOcr.ocr("src/test/resources/LaTeXTemplates_tufte-essay_v2.0.pdf", "/tmp/out.pdf");
     }

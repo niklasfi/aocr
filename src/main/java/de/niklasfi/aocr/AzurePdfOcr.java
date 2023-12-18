@@ -8,6 +8,7 @@ import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.core5.http.ContentType;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import javax.imageio.ImageIO;
@@ -67,7 +68,7 @@ public class AzurePdfOcr {
         final var run = new AzurePdfAnnotator();
 
         try (
-                final var pdDocIn = PDDocument.load(inputPdf);
+                final var pdDocIn = Loader.loadPDF(inputPdf);
                 final var pdDocOut = new PDDocument();
                 final var os = new ByteArrayOutputStream()
         ) {

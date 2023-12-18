@@ -4,17 +4,17 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.niklasfi.aocr.azure.api.AzureApiAdapter;
 import de.niklasfi.aocr.azure.api.AzureUriBuilder;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.rendering.ImageType;
-import org.junit.jupiter.api.Test;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.rendering.ImageType;
+import org.junit.jupiter.api.Test;
 
 @Slf4j
 class AzurePdfOcrMultiThreadTest {
@@ -44,7 +44,7 @@ class AzurePdfOcrMultiThreadTest {
                             apiAdapter,
                             new PdfImageRenderer(300, ImageType.RGB),
                             new FileUtil(),
-                            (doc) -> PDType1Font.HELVETICA
+                            (doc) -> new PDType1Font(Standard14Fonts.FontName.HELVETICA)
                     );
                     log.info("thread {}: submitting job", i);
                     azurePdfOcr.ocr("src/test/resources/LaTeXTemplates_tufte-essay_v2.0.pdf", "/tmp/out-%s.pdf".formatted(i));
