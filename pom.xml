@@ -54,6 +54,7 @@
         <org.codehaus.mojo.versions-maven-plugin.version>2.16.2</org.codehaus.mojo.versions-maven-plugin.version>
         <com.fasterxml.jackson.core.jackson-databind.version>2.16.0</com.fasterxml.jackson.core.jackson-databind.version>
         <org.apache.pdfbox.jbig2-imageio.version>3.0.4</org.apache.pdfbox.jbig2-imageio.version>
+        <org.apache.maven.plugins.maven-enforcer-plugin.version>3.4.1</org.apache.maven.plugins.maven-enforcer-plugin.version>
     </properties>
     <scm>
         <developerConnection>scm:git:ssh://git@github.com/niklasfi/aocr.git</developerConnection>
@@ -309,6 +310,26 @@
                                 </input_file>
                                 <output_file>${project.build.directory}/${project.build.finalName}</output_file>
                             </environmentVariables>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${org.apache.maven.plugins.maven-enforcer-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>enforce-maven</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>3.9</version>
+                                </requireMavenVersion>
+                            </rules>
                         </configuration>
                     </execution>
                 </executions>
