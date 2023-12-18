@@ -56,6 +56,7 @@
         <org.projectlombok.lombok-mapstruct-binding.version>0.2.0</org.projectlombok.lombok-mapstruct-binding.version>
         <org.projectlombok.lombok.version>1.18.30</org.projectlombok.lombok.version>
         <org.sonatype.plugins.nexus-staging-maven-plugin.version>1.6.13</org.sonatype.plugins.nexus-staging-maven-plugin.version>
+        <org.codehaus.mojo.exec-maven-plugin.version>3.0.0</org.codehaus.mojo.exec-maven-plugin.version>
     </properties>
     <scm>
         <developerConnection>scm:git:ssh://git@github.com/niklasfi/aocr.git</developerConnection>
@@ -291,7 +292,7 @@
             <plugin>
                 <artifactId>exec-maven-plugin</artifactId>
                 <groupId>org.codehaus.mojo</groupId>
-                <version>3.0.0</version>
+                <version>${org.codehaus.mojo.exec-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <!--
