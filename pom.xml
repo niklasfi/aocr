@@ -33,29 +33,26 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>19</maven.compiler.source>
         <maven.compiler.target>19</maven.compiler.target>
-        <org.mapstruct.version>1.5.3.Final</org.mapstruct.version>
+        <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <org.apache.maven.plugins.maven-compiler-plugin.version>3.11.0</org.apache.maven.plugins.maven-compiler-plugin.version>
-        <org.junit.version>5.9.2</org.junit.version>
-        <org.projectlombok.lombok.version>1.18.26</org.projectlombok.lombok.version>
+        <org.junit.version>5.10.1</org.junit.version>
+        <org.projectlombok.lombok.version>1.18.30</org.projectlombok.lombok.version>
         <org.projectlombok.lombok-mapstruct-binding.version>0.2.0</org.projectlombok.lombok-mapstruct-binding.version>
-        <org.apache.pdfbox.version>2.0.27</org.apache.pdfbox.version>
-        <commons-cli.version>1.5.0</commons-cli.version>
-        <org.apache.commons.commons-text.version>1.10.0</org.apache.commons.commons-text.version>
-        <org.apache.httpcomponents.client5.version>5.2.1</org.apache.httpcomponents.client5.version>
-        <org.apache.maven.plugins.maven-surefire-plugin.version>3.0.0</org.apache.maven.plugins.maven-surefire-plugin.version>
-        <org.owasp.dependency-check-maven.version>8.2.1</org.owasp.dependency-check-maven.version>
+        <org.apache.pdfbox.version>3.0.1</org.apache.pdfbox.version>
+        <commons-cli.version>1.6.0</commons-cli.version>
+        <org.apache.commons.commons-text.version>1.11.0</org.apache.commons.commons-text.version>
+        <org.apache.httpcomponents.client5.version>5.3</org.apache.httpcomponents.client5.version>
+        <org.apache.maven.plugins.maven-surefire-plugin.version>3.2.3</org.apache.maven.plugins.maven-surefire-plugin.version>
+        <org.owasp.dependency-check-maven.version>9.0.6</org.owasp.dependency-check-maven.version>
         <maven-gpg-plugin.keyname>0x35FF613B8F44CFEB</maven-gpg-plugin.keyname>
-        <org.apache.maven.plugins.maven-source-plugin.version>3.2.1
-        </org.apache.maven.plugins.maven-source-plugin.version>
-        <org.apache.maven.plugins.maven-javadoc-plugin.version>3.5.0
-        </org.apache.maven.plugins.maven-javadoc-plugin.version>
+        <org.apache.maven.plugins.maven-source-plugin.version>3.3.0</org.apache.maven.plugins.maven-source-plugin.version>
+        <org.apache.maven.plugins.maven-javadoc-plugin.version>3.6.3</org.apache.maven.plugins.maven-javadoc-plugin.version>
         <org.sonatype.plugins.nexus-staging-maven-plugin.version>1.6.13
         </org.sonatype.plugins.nexus-staging-maven-plugin.version>
-        <org.apache.maven.plugins.maven-release-plugin.version>3.0.0-M7
-        </org.apache.maven.plugins.maven-release-plugin.version>
-        <org.apache.maven.plugins.maven-gpg-plugin.version>3.0.1</org.apache.maven.plugins.maven-gpg-plugin.version>
-        <org.codehaus.mojo.versions-maven-plugin.version>2.15.0</org.codehaus.mojo.versions-maven-plugin.version>
-        <com.fasterxml.jackson.core.jackson-databind.version>2.14.2</com.fasterxml.jackson.core.jackson-databind.version>
+        <org.apache.maven.plugins.maven-release-plugin.version>3.0.1</org.apache.maven.plugins.maven-release-plugin.version>
+        <org.apache.maven.plugins.maven-gpg-plugin.version>3.1.0</org.apache.maven.plugins.maven-gpg-plugin.version>
+        <org.codehaus.mojo.versions-maven-plugin.version>2.16.2</org.codehaus.mojo.versions-maven-plugin.version>
+        <com.fasterxml.jackson.core.jackson-databind.version>2.16.0</com.fasterxml.jackson.core.jackson-databind.version>
         <org.apache.pdfbox.jbig2-imageio.version>3.0.4</org.apache.pdfbox.jbig2-imageio.version>
     </properties>
     <scm>
