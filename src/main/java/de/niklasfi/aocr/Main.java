@@ -87,15 +87,17 @@ public class Main {
         final var renderColor = switch (cmd.getOptionValue("render-color")) {
             case "binary" -> ImageType.BINARY;
             case "gray" -> ImageType.GRAY;
-            case null, "rgb" -> ImageType.RGB;
+            case "rgb" -> ImageType.RGB;
+            case null -> ImageType.RGB;
             default -> throw new RuntimeException("could not parse render-color option");
         };
 
         final var renderDpi = Optional.ofNullable(cmd.getOptionValue("render-dpi")).map(Integer::parseInt).orElse(300);
 
         final var pdfImageRetriever = switch (cmd.getOptionValue("retrieve-method")) {
-            case "extract", null -> new PdfImageExtractor();
+            case "extract" -> new PdfImageExtractor();
             case "render" -> new PdfImageRenderer(renderDpi, renderColor);
+            case null -> new PdfImageExtractor();
             default -> throw new RuntimeException("could not parse render-method option");
         };
 
